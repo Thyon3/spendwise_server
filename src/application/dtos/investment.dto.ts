@@ -1,50 +1,20 @@
-import { IsString, IsNumber, IsOptional, IsDateString } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsDateString, Min } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateInvestmentDto {
-  @IsString()
-  name: string;
-
-  @IsString()
-  type: string; // STOCKS, BONDS, MUTUAL_FUNDS, CRYPTO, REAL_ESTATE, OTHER
-
-  @IsOptional()
-  @IsString()
-  symbol?: string;
-
-  @IsNumber()
-  quantity: number;
-
-  @IsNumber()
-  purchasePrice: number;
-
-  @IsNumber()
-  currentPrice: number;
-
-  @IsString()
-  currency: string;
-
-  @IsDateString()
-  purchaseDate: string;
-
-  @IsOptional()
-  @IsString()
-  notes?: string;
+  @ApiProperty() @IsString() name: string;
+  @ApiProperty() @IsString() type: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() symbol?: string;
+  @ApiProperty() @IsNumber() @Min(0) quantity: number;
+  @ApiProperty() @IsNumber() @Min(0) purchasePrice: number;
+  @ApiProperty() @IsNumber() @Min(0) currentPrice: number;
+  @ApiProperty() @IsString() currency: string;
+  @ApiProperty() @IsDateString() purchaseDate: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() notes?: string;
 }
 
 export class UpdateInvestmentDto {
-  @IsOptional()
-  @IsString()
-  name?: string;
-
-  @IsOptional()
-  @IsNumber()
-  quantity?: number;
-
-  @IsOptional()
-  @IsNumber()
-  currentPrice?: number;
-
-  @IsOptional()
-  @IsString()
-  notes?: string;
+  @ApiPropertyOptional() @IsOptional() @IsNumber() @Min(0) quantity?: number;
+  @ApiPropertyOptional() @IsOptional() @IsNumber() @Min(0) currentPrice?: number;
+  @ApiPropertyOptional() @IsOptional() @IsString() notes?: string;
 }

@@ -5,7 +5,7 @@ export class Tag {
     createdAt: Date;
     updatedAt: Date;
 
-    constructor(partial: Partial<Tag>) {
-        Object.assign(this, partial);
+    constructor(data: Partial<Tag>) {
+        Object.assign(this, data);
     }
 }
