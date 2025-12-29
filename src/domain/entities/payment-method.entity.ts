@@ -8,4 +8,8 @@ export class PaymentMethod {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+
+  constructor(data: Partial<PaymentMethod>) {
+    Object.assign(this, data);
+  }
 }

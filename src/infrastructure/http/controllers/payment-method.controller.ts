@@ -1,35 +1,65 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { CreatePaymentMethodDto, UpdatePaymentMethodDto } from '../../../application/dtos/payment-method.dto';
+import {
+  CreatePaymentMethodUseCase,
+  ListPaymentMethodsUseCase,
+  GetPaymentMethodUseCase,
+  UpdatePaymentMethodUseCase,
+  DeletePaymentMethodUseCase,
+  SetDefaultPaymentMethodUseCase,
+} from '../../../application/use-cases/payment-method/payment-method.use-case';
 
+@ApiTags('payment-methods')
 @Controller('payment-methods')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class PaymentMethodController {
+  constructor(
+    private readonly createUseCase: CreatePaymentMethodUseCase,
+    private readonly listUseCase: ListPaymentMethodsUseCase,
+    private readonly getUseCase: GetPaymentMethodUseCase,
+    private readonly updateUseCase: UpdatePaymentMethodUseCase,
+    private readonly deleteUseCase: DeletePaymentMethodUseCase,
+    private readonly setDefaultUseCase: SetDefaultPaymentMethodUseCase,
+  ) { }
+
   @Post()
-  async create(@Request() req, @Body() dto: CreatePaymentMethodDto) {
-    return { message: 'Create payment method' };
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create a payment method' })
+  async create(@Request() req: any, @Body() dto: CreatePaymentMethodDto) {
+    return this.createUseCase.execute(req.user.userId, dto);
   }
 
   @Get()
-  async findAll(@Request() req) {
-    return { message: 'Get all payment methods' };
+  @ApiOperation({ summary: 'List all payment methods' })
+  async findAll(@Request() req: any) {
+    return this.listUseCase.execute(req.user.userId);
   }
 
   @Get(':id')
-  async findOne(@Request() req, @Param('id') id: string) {
-    return { message: `Get payment method ${id}` };
+  @ApiOperation({ summary: 'Get a payment method by ID' })
+  async findOne(@Request() req: any, @Param('id') id: string) {
+    return this.getUseCase.execute(req.user.userId, id);
   }
 
   @Put(':id')
-  async update(@Request() req, @Param('id') id: string, @Body() dto: UpdatePaymentMethodDto) {
-    return { message: `Update payment method ${id}` };
+  @ApiOperation({ summary: 'Update a payment method' })
+  async update(@Request() req: any, @Param('id') id: string, @Body() dto: UpdatePaymentMethodDto) {
+    return this.updateUseCase.execute(req.user.userId, id, dto);
   }
 
   @Delete(':id')
-  async delete(@Request() req, @Param('id') id: string) {
-    return { message: `Delete payment method ${id}` };
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a payment method' })
+  async delete(@Request() req: any, @Param('id') id: string) {
+    return this.deleteUseCase.execute(req.user.userId, id);
   }
 
   @Post(':id/set-default')
-  async setDefault(@Request() req, @Param('id') id: string) {
-    return { message: `Set payment method ${id} as default` };
+  @ApiOperation({ summary: 'Set a payment method as default' })
+  async setDefault(@Request() req: any, @Param('id') id: string) {
+    return this.setDefaultUseCase.execute(req.user.userId, id);
   }
 }
