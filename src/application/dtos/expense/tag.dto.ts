@@ -1,15 +1,18 @@
-import { IsString, MinLength, MaxLength } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, MaxLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateTagDto {
+    @ApiProperty({ example: 'groceries' })
     @IsString()
-    @MinLength(1)
-    @MaxLength(30)
+    @IsNotEmpty()
+    @MaxLength(50)
     name: string;
 }
 
 export class UpdateTagDto {
+    @ApiPropertyOptional({ example: 'food' })
     @IsString()
-    @MinLength(1)
-    @MaxLength(30)
-    name: string;
+    @IsOptional()
+    @MaxLength(50)
+    name?: string;
 }
