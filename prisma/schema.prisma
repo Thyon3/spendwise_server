@@ -87,6 +87,7 @@ model Expense {
   tags               Tag[]             @relation("ExpenseTags")
 
   @@index([userId, date])
+  @@index([userId, categoryId])
 }
 
 model Budget {
@@ -105,4 +106,5 @@ model Budget {
   updatedAt   DateTime  @updatedAt
 
   @@index([userId])
+  @@index([userId, categoryId])
 }

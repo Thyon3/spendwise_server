@@ -12,11 +12,17 @@ import { PrismaModule } from './infrastructure/persistence/prisma/prisma.module'
 
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 300, // 5 minutes default
+      max: 100, // maximum number of items in cache
     }),
     ThrottlerModule.forRoot([{
       ttl: 60000,
