@@ -11,40 +11,78 @@ datasource db {
 }
 
 model User {
-  id        String     @id @default(cuid())
-  email     String     @unique
-  password  String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  Category  Category[]
-  Expense   Expense[]
+  id               String             @id @default(cuid())
+  email            String             @unique
+  password         String
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  Category         Category[]
+  Expense          Expense[]
+  RecurringExpense RecurringExpense[]
+  Tag              Tag[]
 }
 
 model Category {
-  id        String    @id @default(cuid())
-  name      String
-  color     String
-  userId    String
-  user      User      @relation(fields: [userId], references: [id])
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  Expense   Expense[]
+  id               String             @id @default(cuid())
+  name             String
+  color            String
+  userId           String
+  user             User               @relation(fields: [userId], references: [id])
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  Expense          Expense[]
+  RecurringExpense RecurringExpense[]
 
   @@unique([userId, name])
 }
 
+model Tag {
+  id        String    @id @default(cuid())
+  name      String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  expenses  Expense[] @relation("ExpenseTags")
+
+  @@unique([userId, name])
+}
+
+model RecurringExpense {
+  id             String    @id @default(cuid())
+  amount         Float
+  currency       String
+  description    String?
+  userId         String
+  user           User      @relation(fields: [userId], references: [id])
+  categoryId     String
+  category       Category  @relation(fields: [categoryId], references: [id])
+  recurrenceType String // NONE, DAILY, WEEKLY, MONTHLY, YEARLY
+  interval       Int       @default(1)
+  startDate      DateTime
+  endDate        DateTime?
+  lastGenerated  DateTime?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  expenses       Expense[]
+}
+
 model Expense {
-  id          String   @id @default(cuid())
-  amount      Float
-  currency    String
-  description String?
-  date        DateTime
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 String            @id @default(cuid())
+  amount             Float
+  currency           String
+  description        String?
+  date               DateTime
+  userId             String
+  user               User              @relation(fields: [userId], references: [id])
+  categoryId         String
+  category           Category          @relation(fields: [categoryId], references: [id])
+  recurringExpenseId String?
+  recurringExpense   RecurringExpense? @relation(fields: [recurringExpenseId], references: [id])
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  tags               Tag[]             @relation("ExpenseTags")
 
   @@index([userId, date])
 }
