@@ -5,6 +5,7 @@ import { HealthModule } from './infrastructure/http/modules/health.module';
 import { AuthModule } from './infrastructure/http/modules/auth.module';
 import { CategoriesModule } from './infrastructure/http/modules/categories.module';
 import { ExpensesModule } from './infrastructure/http/modules/expenses.module';
+import { ReportsModule } from './infrastructure/http/modules/reports.module';
 import { PrismaModule } from './infrastructure/persistence/prisma/prisma.module';
 
 @Module({
@@ -18,6 +19,7 @@ import { PrismaModule } from './infrastructure/persistence/prisma/prisma.module'
     AuthModule,
     CategoriesModule,
     ExpensesModule,
+    ReportsModule,
   ],
 })
 export class AppModule { }
