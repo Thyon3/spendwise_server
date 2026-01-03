@@ -1,7 +1,7 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { IExpenseRepository, ExpenseFilters } from '../../../domain/repositories/expense.repository.interface';
-import { CreateExpenseDto, UpdateExpenseDto, ExpenseFiltersDto } from '../../dtos/expense/expense.dto';
 import { Expense } from '../../../domain/entities/expense.entity';
+import { CreateExpenseDto, UpdateExpenseDto, ExpenseFiltersDto } from '../../dtos/expense/expense.dto';
 
 @Injectable()
 export class CreateExpenseUseCase {
@@ -10,8 +10,8 @@ export class CreateExpenseUseCase {
     async execute(userId: string, dto: CreateExpenseDto): Promise<Expense> {
         return this.expenseRepository.create({
             ...dto,
-            date: new Date(dto.date),
             userId,
+            date: new Date(dto.date),
         });
     }
 }
@@ -34,12 +34,12 @@ export class ListExpensesForUserUseCase {
 export class UpdateExpenseUseCase {
     constructor(private readonly expenseRepository: IExpenseRepository) { }
 
-    async execute(userId: string, expenseId: string, dto: UpdateExpenseDto): Promise<Expense> {
-        const expense = await this.expenseRepository.findById(expenseId);
-        if (!expense) throw new NotFoundException('Expense not found');
-        if (expense.userId !== userId) throw new ForbiddenException('You do not own this expense');
+    async execute(userId: string, id: string, dto: UpdateExpenseDto): Promise<Expense> {
+        const existing = await this.expenseRepository.findById(id);
+        if (!existing) throw new NotFoundException('Expense not found');
+        if (existing.userId !== userId) throw new ForbiddenException('Not owner');
 
-        return this.expenseRepository.update(expenseId, {
+        return this.expenseRepository.update(id, {
             ...dto,
             date: dto.date ? new Date(dto.date) : undefined,
         });
@@ -50,11 +50,11 @@ export class UpdateExpenseUseCase {
 export class DeleteExpenseUseCase {
     constructor(private readonly expenseRepository: IExpenseRepository) { }
 
-    async execute(userId: string, expenseId: string): Promise<void> {
-        const expense = await this.expenseRepository.findById(expenseId);
-        if (!expense) throw new NotFoundException('Expense not found');
-        if (expense.userId !== userId) throw new ForbiddenException('You do not own this expense');
+    async execute(userId: string, id: string): Promise<void> {
+        const existing = await this.expenseRepository.findById(id);
+        if (!existing) throw new NotFoundException('Expense not found');
+        if (existing.userId !== userId) throw new ForbiddenException('Not owner');
 
-        return this.expenseRepository.delete(expenseId);
+        await this.expenseRepository.delete(id);
     }
 }
