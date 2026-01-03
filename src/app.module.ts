@@ -7,6 +7,7 @@ import { CategoriesModule } from './infrastructure/http/modules/categories.modul
 import { ExpensesModule } from './infrastructure/http/modules/expenses.module';
 import { ReportsModule } from './infrastructure/http/modules/reports.module';
 import { BudgetsModule } from './infrastructure/http/modules/budgets.module';
+import { ExportsModule } from './infrastructure/http/modules/exports.module';
 import { PrismaModule } from './infrastructure/persistence/prisma/prisma.module';
 
 @Module({
@@ -22,6 +23,7 @@ import { PrismaModule } from './infrastructure/persistence/prisma/prisma.module'
     ExpensesModule,
     ReportsModule,
     BudgetsModule,
+    ExportsModule,
   ],
 })
 export class AppModule { }
