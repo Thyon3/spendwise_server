@@ -10,11 +10,18 @@ import { BudgetsModule } from './infrastructure/http/modules/budgets.module';
 import { ExportsModule } from './infrastructure/http/modules/exports.module';
 import { PrismaModule } from './infrastructure/persistence/prisma/prisma.module';
 
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 100,
+    }]),
     PrismaModule,
     HealthModule,
     UsersModule,
@@ -24,6 +31,12 @@ import { PrismaModule } from './infrastructure/persistence/prisma/prisma.module'
     ReportsModule,
     BudgetsModule,
     ExportsModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule { }
