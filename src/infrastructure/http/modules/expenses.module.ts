@@ -4,12 +4,10 @@ import { CreateExpenseUseCase, ListExpensesForUserUseCase, UpdateExpenseUseCase,
 import { GetExpenseSummaryUseCase } from '../../../../application/use-cases/expense/get-expense-summary.use-case';
 import { IExpenseRepository } from '../../../../domain/repositories/expense.repository.interface';
 import { PrismaExpenseRepository } from '../../persistence/prisma/prisma-expense.repository';
-import { PrismaService } from '../../persistence/prisma/prisma.service';
 
 @Module({
     controllers: [ExpensesController],
     providers: [
-        PrismaService,
         CreateExpenseUseCase,
         ListExpensesForUserUseCase,
         UpdateExpenseUseCase,

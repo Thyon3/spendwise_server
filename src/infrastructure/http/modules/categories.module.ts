@@ -4,12 +4,10 @@ import { CreateCategoryUseCase } from '../../../../application/use-cases/categor
 import { ListCategoriesForUserUseCase, UpdateCategoryUseCase, DeleteCategoryUseCase } from '../../../../application/use-cases/category/category-ops.use-case';
 import { ICategoryRepository } from '../../../../domain/repositories/category.repository.interface';
 import { PrismaCategoryRepository } from '../../persistence/prisma/prisma-category.repository';
-import { PrismaService } from '../../persistence/prisma/prisma.service';
 
 @Module({
     controllers: [CategoriesController],
     providers: [
-        PrismaService,
         CreateCategoryUseCase,
         ListCategoriesForUserUseCase,
         UpdateCategoryUseCase,

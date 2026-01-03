@@ -13,7 +13,6 @@ import { PrismaUserRepository } from '../../persistence/prisma/prisma-user.repos
 import { BcryptPasswordHasher } from '../../services/bcrypt-password-hasher.service';
 import { JwtTokenService } from '../../services/jwt-token-service.service';
 import { JwtStrategy } from '../guards/jwt.strategy';
-import { PrismaService } from '../../persistence/prisma/prisma.service';
 
 @Module({
     imports: [
@@ -31,7 +30,6 @@ import { PrismaService } from '../../persistence/prisma/prisma.service';
     ],
     controllers: [AuthController],
     providers: [
-        PrismaService,
         RegisterUserUseCase,
         LoginUserUseCase,
         GetCurrentUserUseCase,
