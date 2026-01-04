@@ -18,20 +18,24 @@ model User {
   updatedAt        DateTime           @updatedAt
   Category         Category[]
   Expense          Expense[]
+  Income           Income[]
   RecurringExpense RecurringExpense[]
   Tag              Tag[]
   Budget           Budget[]
+  Settings         Settings?
 }
 
 model Category {
   id               String             @id @default(cuid())
   name             String
   color            String
+  type             CategoryType       @default(EXPENSE)
   userId           String
   user             User               @relation(fields: [userId], references: [id])
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
   Expense          Expense[]
+  Income           Income[]
   RecurringExpense RecurringExpense[]
   Budget           Budget[]
 
@@ -107,4 +111,37 @@ model Budget {
 
   @@index([userId])
   @@index([userId, categoryId])
+}
+
+enum CategoryType {
+  EXPENSE
+  INCOME
+}
+
+model Income {
+  id          String   @id @default(cuid())
+  amount      Float
+  currency    String
+  description String?
+  date        DateTime
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, date])
+  @@index([userId, categoryId])
+}
+
+model Settings {
+  id                  String  @id @default(cuid())
+  userId              String  @unique
+  user                User    @relation(fields: [userId], references: [id])
+  preferredCurrency   String  @default("USD")
+  theme               String  @default("SYSTEM") // LIGHT, DARK, SYSTEM
+  notificationsEnabled Boolean @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
