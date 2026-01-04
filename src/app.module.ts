@@ -8,6 +8,7 @@ import { ExpensesModule } from './infrastructure/http/modules/expenses.module';
 import { ReportsModule } from './infrastructure/http/modules/reports.module';
 import { BudgetsModule } from './infrastructure/http/modules/budgets.module';
 import { ExportsModule } from './infrastructure/http/modules/exports.module';
+import { IncomeModule } from './infrastructure/http/modules/income.module';
 import { PrismaModule } from './infrastructure/persistence/prisma/prisma.module';
 
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -34,6 +35,7 @@ import { CacheModule } from '@nestjs/cache-manager';
     AuthModule,
     CategoriesModule,
     ExpensesModule,
+    IncomeModule,
     ReportsModule,
     BudgetsModule,
     ExportsModule,
