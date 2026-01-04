@@ -1,4 +1,4 @@
-import { TimeRangeReport, TrendReport } from '../entities/report.entity';
+import { TimeRangeReport, TrendReport, FinancialSummary } from '../entities/report.entity';
 
 export interface ReportFilters {
     from: Date;
@@ -16,4 +16,5 @@ export interface TrendFilters {
 export abstract class IReportingRepository {
     abstract getSpendingSummaryForPeriod(userId: string, filters: ReportFilters): Promise<TimeRangeReport>;
     abstract getSpendingTrends(userId: string, filters: TrendFilters): Promise<TrendReport>;
+    abstract getFinancialSummary(userId: string, from: Date, to: Date): Promise<FinancialSummary>;
 }

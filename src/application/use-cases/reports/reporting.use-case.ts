@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { IReportingRepository, ReportFilters, TrendFilters } from '../../../domain/repositories/reporting.repository.interface';
-import { TimeRangeReport, TrendReport } from '../../../domain/entities/report.entity';
+import { TimeRangeReport, TrendReport, FinancialSummary } from '../../../domain/entities/report.entity';
 import { GetSpendingSummaryDto, GetSpendingTrendsDto } from '../../dtos/reports/reports.dto';
 
 @Injectable()
@@ -29,5 +29,17 @@ export class GetSpendingTrendsUseCase {
             granularity: dto.granularity,
         };
         return this.reportingRepository.getSpendingTrends(userId, filters);
+    }
+}
+@Injectable()
+export class GetFinancialSummaryUseCase {
+    constructor(private readonly reportingRepository: IReportingRepository) { }
+
+    async execute(userId: string, dto: GetSpendingSummaryDto): Promise<FinancialSummary> {
+        return this.reportingRepository.getFinancialSummary(
+            userId,
+            new Date(dto.from),
+            new Date(dto.to),
+        );
     }
 }

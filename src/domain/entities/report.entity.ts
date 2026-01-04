@@ -42,3 +42,13 @@ export class TrendReport {
         Object.assign(this, partial);
     }
 }
+
+export class FinancialSummary {
+    income: number;
+    expense: number;
+    balance: number;
+
+    constructor(partial: Partial<FinancialSummary>) {
+        Object.assign(this, partial);
+    }
+}

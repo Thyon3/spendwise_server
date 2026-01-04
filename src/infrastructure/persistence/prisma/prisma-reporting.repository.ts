@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { IReportingRepository, ReportFilters, TrendFilters } from '../../../../domain/repositories/reporting.repository.interface';
-import { TimeRangeReport, TrendReport, TrendPoint, CategoryBreakdown, TagBreakdown } from '../../../../domain/entities/report.entity';
+import { TimeRangeReport, TrendReport, TrendPoint, CategoryBreakdown, TagBreakdown, FinancialSummary } from '../../../../domain/entities/report.entity';
 import { PrismaService } from './prisma.service';
 
 @Injectable()
@@ -121,6 +121,33 @@ export class PrismaReportingRepository implements IReportingRepository {
         return new TrendReport({
             granularity,
             trends,
+        });
+    }
+
+    async getFinancialSummary(userId: string, from: Date, to: Date): Promise<FinancialSummary> {
+        const expenseAgg = await this.prisma.expense.aggregate({
+            where: {
+                userId,
+                date: { gte: from, lte: to },
+            },
+            _sum: { amount: true },
+        });
+
+        const incomeAgg = await this.prisma.income.aggregate({
+            where: {
+                userId,
+                date: { gte: from, lte: to },
+            },
+            _sum: { amount: true },
+        });
+
+        const expense = expenseAgg._sum.amount || 0;
+        const income = incomeAgg._sum.amount || 0;
+
+        return new FinancialSummary({
+            income,
+            expense,
+            balance: income - expense,
         });
     }
 

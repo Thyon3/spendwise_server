@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ReportsController } from '../controllers/reports.controller';
-import { GetSpendingSummaryUseCase, GetSpendingTrendsUseCase } from '../../../../application/use-cases/reports/reporting.use-case';
+import { GetSpendingSummaryUseCase, GetSpendingTrendsUseCase, GetFinancialSummaryUseCase } from '../../../../application/use-cases/reports/reporting.use-case';
 import { IReportingRepository } from '../../../../domain/repositories/reporting.repository.interface';
 import { PrismaReportingRepository } from '../../persistence/prisma/prisma-reporting.repository';
 
@@ -9,6 +9,7 @@ import { PrismaReportingRepository } from '../../persistence/prisma/prisma-repor
     providers: [
         GetSpendingSummaryUseCase,
         GetSpendingTrendsUseCase,
+        GetFinancialSummaryUseCase,
         {
             provide: IReportingRepository,
             useClass: PrismaReportingRepository,
