@@ -90,6 +90,7 @@ model Expense {
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
   tags               Tag[]             @relation("ExpenseTags")
+  attachments        Attachment[]
 
   @@index([userId, date])
   @@index([userId, categoryId])
@@ -162,4 +163,17 @@ model Notification {
 
   @@index([userId, isRead])
   @@index([userId, createdAt])
+}
+
+model Attachment {
+  id          String   @id @default(cuid())
+  expenseId   String
+  expense     Expense  @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  fileName    String
+  fileUrl     String
+  fileSize    Int
+  mimeType    String
+  createdAt   DateTime @default(now())
+
+  @@index([expenseId])
 }
