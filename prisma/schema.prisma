@@ -89,6 +89,8 @@ model Expense {
   category           Category          @relation(fields: [categoryId], references: [id])
   recurringExpenseId String?
   recurringExpense   RecurringExpense? @relation(fields: [recurringExpenseId], references: [id])
+  paymentMethodId    String?
+  paymentMethod      PaymentMethod?    @relation(fields: [paymentMethodId], references: [id])
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
   tags               Tag[]             @relation("ExpenseTags")
@@ -208,6 +210,7 @@ model PaymentMethod {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  expenses    Expense[]
 
   @@index([userId])
 }
