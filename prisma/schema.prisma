@@ -23,6 +23,7 @@ model User {
   Tag              Tag[]
   Budget           Budget[]
   Settings         Settings?
+  Notification     Notification[]
 }
 
 model Category {
@@ -144,4 +145,21 @@ model Settings {
   notificationsEnabled Boolean @default(true)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+}
+
+model Notification {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id])
+  title             String
+  message           String
+  type              String    // BUDGET_ALERT, RECURRING_REMINDER, GOAL_ACHIEVED, etc.
+  isRead            Boolean   @default(false)
+  relatedEntityId   String?
+  relatedEntityType String?
+  createdAt         DateTime  @default(now())
+  readAt            DateTime?
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
 }
