@@ -214,3 +214,19 @@ model PaymentMethod {
 
   @@index([userId])
 }
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  action      String   // CREATE, UPDATE, DELETE
+  entityType  String   // EXPENSE, INCOME, BUDGET, etc.
+  entityId    String
+  oldValue    String?  // JSON string
+  newValue    String?  // JSON string
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([entityType, entityId])
+}
