@@ -24,6 +24,7 @@ model User {
   Budget           Budget[]
   Settings         Settings?
   Notification     Notification[]
+  SavingsGoal      SavingsGoal[]
 }
 
 model Category {
@@ -176,4 +177,21 @@ model Attachment {
   createdAt   DateTime @default(now())
 
   @@index([expenseId])
+}
+
+model SavingsGoal {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  name          String
+  targetAmount  Float
+  currentAmount Float    @default(0)
+  currency      String
+  deadline      DateTime?
+  description   String?
+  isCompleted   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
 }
