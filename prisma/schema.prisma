@@ -25,6 +25,7 @@ model User {
   Settings         Settings?
   Notification     Notification[]
   SavingsGoal      SavingsGoal[]
+  PaymentMethod    PaymentMethod[]
 }
 
 model Category {
@@ -192,6 +193,21 @@ model SavingsGoal {
   isCompleted   Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model PaymentMethod {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  name        String
+  type        String   // CASH, CREDIT_CARD, DEBIT_CARD, BANK_TRANSFER, DIGITAL_WALLET
+  lastFourDigits String?
+  isDefault   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([userId])
 }
