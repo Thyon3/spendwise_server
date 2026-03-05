@@ -122,6 +122,10 @@ model Budget {
   periodEnd   DateTime?
   categoryId  String?
   category    Category? @relation(fields: [categoryId], references: [id])
+  rollover    Boolean   @default(false)
+  alertAt50   Boolean   @default(true)
+  alertAt75   Boolean   @default(true)
+  alertAt90   Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
