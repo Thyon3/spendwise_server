@@ -32,6 +32,7 @@ model User {
   Notification     Notification[]
   SavingsGoal      SavingsGoal[]
   PaymentMethod    PaymentMethod[]
+  Session          Session[]
 }
 
 model Category {
@@ -235,4 +236,21 @@ model AuditLog {
 
   @@index([userId, createdAt])
   @@index([entityType, entityId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token        String   @unique
+  deviceInfo   String?
+  ipAddress    String?
+  userAgent    String?
+  isActive     Boolean  @default(true)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  lastActiveAt DateTime @default(now())
+
+  @@index([userId, isActive])
+  @@index([token])
 }
