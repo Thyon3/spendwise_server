@@ -36,6 +36,7 @@ model User {
   Debt             Debt[]
   Investment       Investment[]
   BudgetTemplate   BudgetTemplate[]
+  FinancialGoal    FinancialGoal[]
 }
 
 model Category {
@@ -366,4 +367,23 @@ model CurrencyRate {
 
   @@unique([baseCurrency, targetCurrency])
   @@index([baseCurrency])
+}
+
+model FinancialGoal {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  name            String
+  type            String   // RETIREMENT, EMERGENCY_FUND, VACATION, EDUCATION, OTHER
+  targetAmount    Float
+  currentAmount   Float    @default(0)
+  currency        String
+  targetDate      DateTime?
+  priority        Int      @default(1) // 1-5, 5 being highest
+  description     String?
+  isCompleted     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
 }
