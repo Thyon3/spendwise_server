@@ -167,6 +167,10 @@ model Settings {
   preferredCurrency   String  @default("USD")
   theme               String  @default("SYSTEM") // LIGHT, DARK, SYSTEM
   notificationsEnabled Boolean @default(true)
+  biometricEnabled    Boolean @default(false)
+  language            String  @default("en")
+  dateFormat          String  @default("MM/DD/YYYY")
+  firstDayOfWeek      Int     @default(0) // 0 = Sunday, 1 = Monday
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 }
