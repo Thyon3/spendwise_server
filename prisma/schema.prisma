@@ -159,6 +159,8 @@ model Income {
   currency    String
   description String?
   date        DateTime
+  source      String?
+  isRecurring Boolean  @default(false)
   userId      String
   user        User     @relation(fields: [userId], references: [id])
   categoryId  String
