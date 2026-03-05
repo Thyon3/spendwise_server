@@ -34,6 +34,7 @@ model User {
   PaymentMethod    PaymentMethod[]
   Session          Session[]
   Debt             Debt[]
+  Investment       Investment[]
 }
 
 model Category {
@@ -305,4 +306,23 @@ model DebtPayment {
   createdAt       DateTime @default(now())
 
   @@index([debtId])
+}
+
+model Investment {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  name            String
+  type            String   // STOCKS, BONDS, MUTUAL_FUNDS, CRYPTO, REAL_ESTATE, OTHER
+  symbol          String?
+  quantity        Float
+  purchasePrice   Float
+  currentPrice    Float
+  currency        String
+  purchaseDate    DateTime
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
 }
