@@ -37,6 +37,7 @@ model User {
   Investment       Investment[]
   BudgetTemplate   BudgetTemplate[]
   FinancialGoal    FinancialGoal[]
+  RecurringIncome  RecurringIncome[]
 }
 
 model Category {
@@ -52,6 +53,7 @@ model Category {
   Income           Income[]
   RecurringExpense RecurringExpense[]
   Budget           Budget[]
+  RecurringIncome  RecurringIncome[]
 
   @@unique([userId, name])
 }
@@ -384,6 +386,27 @@ model FinancialGoal {
   isCompleted     Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model RecurringIncome {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id])
+  amount         Float
+  currency       String
+  description    String?
+  categoryId     String
+  category       Category  @relation(fields: [categoryId], references: [id])
+  recurrenceType String    // DAILY, WEEKLY, MONTHLY, YEARLY
+  interval       Int       @default(1)
+  startDate      DateTime
+  endDate        DateTime?
+  lastGenerated  DateTime?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([userId])
 }
