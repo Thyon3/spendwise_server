@@ -100,6 +100,8 @@ model Expense {
   location           String?
   notes              String?
   isFavorite         Boolean           @default(false)
+  isReconciled       Boolean           @default(false)
+  reconciledAt       DateTime?
   userId             String
   user               User              @relation(fields: [userId], references: [id])
   categoryId         String
@@ -117,6 +119,7 @@ model Expense {
   @@index([userId, date])
   @@index([userId, categoryId])
   @@index([userId, isFavorite])
+  @@index([userId, isReconciled])
 }
 
 model Budget {
