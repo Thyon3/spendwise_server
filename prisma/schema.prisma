@@ -355,3 +355,15 @@ model BudgetTemplate {
 
   @@index([userId])
 }
+
+model CurrencyRate {
+  id           String   @id @default(cuid())
+  baseCurrency String
+  targetCurrency String
+  rate         Float
+  lastUpdated  DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  @@unique([baseCurrency, targetCurrency])
+  @@index([baseCurrency])
+}
