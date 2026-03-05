@@ -10,13 +10,18 @@ export class ExpenseFilterDto {
   endDate?: string;
 
   @IsOptional()
-  @IsString()
-  categoryId?: string;
+  @IsArray()
+  @IsString({ each: true })
+  categoryIds?: string[];
 
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  tags?: string[];
+  tagIds?: string[];
+
+  @IsOptional()
+  @IsString()
+  paymentMethodId?: string;
 
   @IsOptional()
   @IsNumber()
@@ -28,11 +33,15 @@ export class ExpenseFilterDto {
 
   @IsOptional()
   @IsString()
-  paymentMethodId?: string;
+  searchQuery?: string;
 
   @IsOptional()
   @IsString()
-  searchTerm?: string;
+  sortBy?: string; // date, amount, category
+
+  @IsOptional()
+  @IsString()
+  sortOrder?: string; // asc, desc
 
   @IsOptional()
   @IsNumber()
@@ -41,12 +50,39 @@ export class ExpenseFilterDto {
   @IsOptional()
   @IsNumber()
   limit?: number;
+}
+
+export class IncomeFilterDto {
+  @IsOptional()
+  @IsDateString()
+  startDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  categoryIds?: string[];
+
+  @IsOptional()
+  @IsNumber()
+  minAmount?: number;
+
+  @IsOptional()
+  @IsNumber()
+  maxAmount?: number;
 
   @IsOptional()
   @IsString()
-  sortBy?: string;
+  searchQuery?: string;
 
   @IsOptional()
-  @IsString()
-  sortOrder?: 'asc' | 'desc';
+  @IsNumber()
+  page?: number;
+
+  @IsOptional()
+  @IsNumber()
+  limit?: number;
 }
