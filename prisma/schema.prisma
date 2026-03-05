@@ -38,6 +38,7 @@ model User {
   BudgetTemplate   BudgetTemplate[]
   FinancialGoal    FinancialGoal[]
   RecurringIncome  RecurringIncome[]
+  Subscription     Subscription[]
 }
 
 model Category {
@@ -409,4 +410,26 @@ model RecurringIncome {
   updatedAt      DateTime  @updatedAt
 
   @@index([userId])
+}
+
+model Subscription {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  name            String
+  provider        String
+  amount          Float
+  currency        String
+  billingCycle    String   // MONTHLY, YEARLY, WEEKLY
+  startDate       DateTime
+  nextBillingDate DateTime
+  endDate         DateTime?
+  isActive        Boolean  @default(true)
+  categoryId      String?
+  reminderDays    Int      @default(3)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, nextBillingDate])
 }
