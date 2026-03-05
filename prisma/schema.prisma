@@ -102,6 +102,7 @@ model Expense {
   updatedAt          DateTime          @updatedAt
   tags               Tag[]             @relation("ExpenseTags")
   attachments        Attachment[]
+  sharedExpenses     SharedExpense[]
 
   @@index([userId, date])
   @@index([userId, categoryId])
@@ -253,4 +254,19 @@ model Session {
 
   @@index([userId, isActive])
   @@index([token])
+}
+
+model SharedExpense {
+  id          String   @id @default(cuid())
+  expenseId   String
+  expense     Expense  @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  sharedWith  String   // Email or user ID
+  splitType   String   // EQUAL, PERCENTAGE, EXACT_AMOUNT
+  splitValue  Float    // Percentage or exact amount
+  isPaid      Boolean  @default(false)
+  paidAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([expenseId])
 }
