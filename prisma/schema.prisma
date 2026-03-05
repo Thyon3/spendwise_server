@@ -46,6 +46,7 @@ model Category {
   id               String             @id @default(cuid())
   name             String
   color            String
+  icon             String?
   type             CategoryType       @default(EXPENSE)
   userId           String
   user             User               @relation(fields: [userId], references: [id])
