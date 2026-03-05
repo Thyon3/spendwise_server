@@ -33,6 +33,7 @@ model User {
   SavingsGoal      SavingsGoal[]
   PaymentMethod    PaymentMethod[]
   Session          Session[]
+  Debt             Debt[]
 }
 
 model Category {
@@ -269,4 +270,39 @@ model SharedExpense {
   updatedAt   DateTime @updatedAt
 
   @@index([expenseId])
+}
+
+model Debt {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  name            String
+  type            String   // LOAN, CREDIT_CARD, MORTGAGE, PERSONAL
+  totalAmount     Float
+  remainingAmount Float
+  interestRate    Float?
+  currency        String
+  startDate       DateTime
+  dueDate         DateTime?
+  minimumPayment  Float?
+  isPaidOff       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  payments        DebtPayment[]
+
+  @@index([userId])
+}
+
+model DebtPayment {
+  id              String   @id @default(cuid())
+  debtId          String
+  debt            Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  amount          Float
+  principalAmount Float
+  interestAmount  Float
+  paymentDate     DateTime
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  @@index([debtId])
 }
