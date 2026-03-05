@@ -39,6 +39,7 @@ model User {
   FinancialGoal    FinancialGoal[]
   RecurringIncome  RecurringIncome[]
   Subscription     Subscription[]
+  Wishlist         Wishlist[]
 }
 
 model Category {
@@ -435,4 +436,25 @@ model Subscription {
 
   @@index([userId])
   @@index([userId, nextBillingDate])
+}
+
+model Wishlist {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  name        String
+  description String?
+  estimatedCost Float
+  currency    String
+  priority    Int      @default(3) // 1-5
+  targetDate  DateTime?
+  isPurchased Boolean  @default(false)
+  purchasedAt DateTime?
+  url         String?
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, isPurchased])
 }
