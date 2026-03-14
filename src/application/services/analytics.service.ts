@@ -5,15 +5,15 @@ import { PrismaService } from '../../infrastructure/persistence/prisma/prisma.se
 export class AnalyticsService {
   constructor(private prisma: PrismaService) { }
 
-  async getSpendingTrends(userId: string, period: 'weekly' | 'monthly' | 'yearly') {
-    const dateFilter = this.getDateFilter(period);
+  async getSpendingTrends(userId: string, months: number) {
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - months);
 
     const expenses = await this.prisma.expense.findMany({
       where: {
         userId,
         date: {
-          gte: dateFilter.startDate,
-          lte: dateFilter.endDate,
+          gte: startDate,
         },
       },
       include: {
@@ -24,19 +24,17 @@ export class AnalyticsService {
       },
     });
 
-    return this.processSpendingTrends(expenses, period);
+    return this.processSpendingTrends(expenses, 'monthly');
   }
 
-  async getCategoryBreakdown(userId: string, period: 'weekly' | 'monthly' | 'yearly') {
-    const dateFilter = this.getDateFilter(period);
-
+  async getCategoryInsights(userId: string, startDate: string, endDate: string) {
     const categoryExpenses = await this.prisma.expense.groupBy({
       by: ['categoryId'],
       where: {
         userId,
         date: {
-          gte: dateFilter.startDate,
-          lte: dateFilter.endDate,
+          gte: new Date(startDate),
+          lte: new Date(endDate),
         },
       },
       _sum: {
@@ -55,54 +53,136 @@ export class AnalyticsService {
       },
     });
 
-    return categoryExpenses.map(expense => {
-      const category = categories.find(c => c.id === expense.categoryId);
-      return {
-        categoryId: expense.categoryId,
-        categoryName: category?.name || 'Unknown',
-        categoryColor: category?.color || '#000000',
-        totalAmount: expense._sum.amount || 0,
-        transactionCount: expense._count.id,
-      };
-    }).sort((a, b) => b.totalAmount - a.totalAmount);
+    const totalAmount = categoryExpenses.reduce((sum, e) => sum + (e._sum.amount || 0), 0);
+
+    return {
+      topCategories: categoryExpenses.map(expense => {
+        const category = categories.find(c => c.id === expense.categoryId);
+        return {
+          categoryId: expense.categoryId,
+          categoryName: category?.name || 'Unknown',
+          categoryColor: category?.color || '#000000',
+          totalAmount: expense._sum.amount || 0,
+          transactionCount: expense._count.id,
+          percentage: totalAmount > 0 ? ((expense._sum.amount || 0) / totalAmount) * 100 : 0,
+        };
+      }).sort((a, b) => b.totalAmount - a.totalAmount),
+      categoryPercentages: categoryExpenses.reduce((acc, expense) => {
+        const category = categories.find(c => c.id === expense.categoryId);
+        acc[category?.name || 'Unknown'] = totalAmount > 0 ? ((expense._sum.amount || 0) / totalAmount) * 100 : 0;
+        return acc;
+      }, {}),
+    };
   }
 
-  async getIncomeVsExpenses(userId: string, period: 'weekly' | 'monthly' | 'yearly') {
-    const dateFilter = this.getDateFilter(period);
+  async getPredictions(userId: string) {
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
-    const [expenses, income] = await Promise.all([
-      this.prisma.expense.groupBy({
-        by: ['date'],
+    const expenses = await this.prisma.expense.findMany({
+      where: {
+        userId,
+        date: {
+          gte: threeMonthsAgo,
+        },
+      },
+      include: {
+        category: true,
+      },
+    });
+
+    const predictions = this.calculatePredictions(expenses);
+
+    return {
+      nextMonthPrediction: predictions.monthlyExpenses,
+      savingsRecommendation: predictions.recommendations[0] || 'No specific recommendations available',
+    };
+  }
+
+  async comparePeriods(userId: string, periods: any) {
+    const [period1Expenses, period2Expenses] = await Promise.all([
+      this.prisma.expense.aggregate({
         where: {
           userId,
           date: {
-            gte: dateFilter.startDate,
-            lte: dateFilter.endDate,
+            gte: new Date(periods.period1.start),
+            lte: new Date(periods.period1.end),
           },
         },
-        _sum: {
-          amount: true,
-        },
+        _sum: { amount: true },
       }),
-      this.prisma.income.groupBy({
-        by: ['date'],
+      this.prisma.expense.aggregate({
         where: {
           userId,
           date: {
-            gte: dateFilter.startDate,
-            lte: dateFilter.endDate,
+            gte: new Date(periods.period2.start),
+            lte: new Date(periods.period2.end),
           },
         },
-        _sum: {
-          amount: true,
-        },
+        _sum: { amount: true },
       }),
     ]);
 
-    return this.combineIncomeExpenses(expenses, income, period);
+    const period1Total = period1Expenses._sum.amount || 0;
+    const period2Total = period2Expenses._sum.amount || 0;
+    const percentageChange = period1Total > 0 ? ((period2Total - period1Total) / period1Total) * 100 : 0;
+
+    return {
+      period1Total,
+      period2Total,
+      percentageChange,
+    };
   }
 
-  async getBudgetPerformance(userId: string) {
+  async getDashboardData(userId: string) {
+    const currentMonth = new Date();
+    const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+    const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+
+    const [totalExpenses, totalIncome, currentMonthExpenses, currentMonthIncome, categories] = await Promise.all([
+      this.prisma.expense.aggregate({
+        where: { userId },
+        _sum: { amount: true },
+      }),
+      this.prisma.income.aggregate({
+        where: { userId },
+        _sum: { amount: true },
+      }),
+      this.prisma.expense.aggregate({
+        where: {
+          userId,
+          date: {
+            gte: monthStart,
+            lte: monthEnd,
+          },
+        },
+        _sum: { amount: true },
+      }),
+      this.prisma.income.aggregate({
+        where: {
+          userId,
+          date: {
+            gte: monthStart,
+            lte: monthEnd,
+          },
+        },
+        _sum: { amount: true },
+      }),
+      this.getCategoryBreakdown(userId, 'monthly'),
+    ]);
+
+    return {
+      totalExpenses: totalExpenses._sum.amount || 0,
+      totalIncome: totalIncome._sum.amount || 0,
+      netWorth: (totalIncome._sum.amount || 0) - (totalExpenses._sum.amount || 0),
+      currentMonthExpenses: currentMonthExpenses._sum.amount || 0,
+      currentMonthIncome: currentMonthIncome._sum.amount || 0,
+      currentMonthNet: (currentMonthIncome._sum.amount || 0) - (currentMonthExpenses._sum.amount || 0),
+      topCategories: categories.slice(0, 5),
+    };
+  }
+
+  async getBudgetPerformance(userId: string, period?: 'weekly' | 'monthly' | 'yearly') {
     const budgets = await this.prisma.budget.findMany({
       where: {
         userId,
@@ -149,38 +229,12 @@ export class AnalyticsService {
     return budgetPerformance;
   }
 
-  async getSavingsGoalsProgress(userId: string) {
-    const savingsGoals = await this.prisma.savingsGoal.findMany({
-      where: {
-        userId,
-      },
-    });
-
-    return savingsGoals.map(goal => {
-      const progressPercentage = (goal.currentAmount / goal.targetAmount) * 100;
-      const remaining = goal.targetAmount - goal.currentAmount;
-
-      return {
-        goalId: goal.id,
-        goalName: goal.name,
-        targetAmount: goal.targetAmount,
-        currentAmount: goal.currentAmount,
-        remaining,
-        progressPercentage,
-        isCompleted: goal.isCompleted,
-        daysUntilDeadline: goal.deadline
-          ? Math.ceil((goal.deadline.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
-          : null,
-      };
-    });
-  }
-
-  async getFinancialSummary(userId: string) {
+  async getFinancialHealthScore(userId: string) {
     const currentMonth = new Date();
     const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
     const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
 
-    const [totalExpenses, totalIncome, currentMonthExpenses, currentMonthIncome] = await Promise.all([
+    const [totalExpenses, totalIncome, currentMonthExpenses, currentMonthIncome, budgets] = await Promise.all([
       this.prisma.expense.aggregate({
         where: { userId },
         _sum: { amount: true },
@@ -208,43 +262,89 @@ export class AnalyticsService {
           },
         },
         _sum: { amount: true },
+      }),
+      this.prisma.budget.findMany({
+        where: { userId },
       }),
     ]);
 
+    const totalExp = totalExpenses._sum.amount || 0;
+    const totalInc = totalIncome._sum.amount || 0;
+    const currentMonthExp = currentMonthExpenses._sum.amount || 0;
+    const currentMonthInc = currentMonthIncome._sum.amount || 0;
+
+    // Calculate financial health score (0-100)
+    let score = 50; // Base score
+
+    // Income vs Expenses ratio (40% of score)
+    if (totalInc > 0) {
+      const ratio = (totalInc - totalExp) / totalInc;
+      score += ratio * 40;
+    }
+
+    // Budget adherence (30% of score)
+    if (budgets.length > 0) {
+      const overBudgetCount = budgets.filter(b => {
+        // Simplified check - in real implementation, check actual spending
+        return false;
+      }).length;
+      const budgetScore = 30 * (1 - overBudgetCount / budgets.length);
+      score += budgetScore;
+    }
+
+    // Savings rate (30% of score)
+    if (currentMonthInc > 0) {
+      const savingsRate = (currentMonthInc - currentMonthExp) / currentMonthInc;
+      score += savingsRate * 30;
+    }
+
+    score = Math.max(0, Math.min(100, score));
+
     return {
-      totalExpenses: totalExpenses._sum.amount || 0,
-      totalIncome: totalIncome._sum.amount || 0,
-      netWorth: (totalIncome._sum.amount || 0) - (totalExpenses._sum.amount || 0),
-      currentMonthExpenses: currentMonthExpenses._sum.amount || 0,
-      currentMonthIncome: currentMonthIncome._sum.amount || 0,
-      currentMonthNet: (currentMonthIncome._sum.amount || 0) - (currentMonthExpenses._sum.amount || 0),
+      score: Math.round(score),
+      grade: this.getGrade(score),
+      recommendations: this.getRecommendations(score),
     };
   }
 
-  async getPredictiveAnalytics(userId: string) {
-    // Get last 3 months of data for prediction
-    const threeMonthsAgo = new Date();
-    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+  async getCategoryBreakdown(userId: string, period: 'weekly' | 'monthly' | 'yearly') {
+    const dateFilter = this.getDateFilter(period);
 
-    const expenses = await this.prisma.expense.findMany({
+    const categoryExpenses = await this.prisma.expense.groupBy({
+      by: ['categoryId'],
       where: {
         userId,
         date: {
-          gte: threeMonthsAgo,
+          gte: dateFilter.startDate,
+          lte: dateFilter.endDate,
         },
       },
-      include: {
-        category: true,
+      _sum: {
+        amount: true,
+      },
+      _count: {
+        id: true,
       },
     });
 
-    const predictions = this.calculatePredictions(expenses);
+    const categories = await this.prisma.category.findMany({
+      where: {
+        id: {
+          in: categoryExpenses.map(e => e.categoryId),
+        },
+      },
+    });
 
-    return {
-      predictedMonthlyExpenses: predictions.monthlyExpenses,
-      predictedCategorySpending: predictions.categorySpending,
-      savingsRecommendations: predictions.recommendations,
-    };
+    return categoryExpenses.map(expense => {
+      const category = categories.find(c => c.id === expense.categoryId);
+      return {
+        categoryId: expense.categoryId,
+        categoryName: category?.name || 'Unknown',
+        categoryColor: category?.color || '#000000',
+        totalAmount: expense._sum.amount || 0,
+        transactionCount: expense._count.id,
+      };
+    }).sort((a, b) => b.totalAmount - a.totalAmount);
   }
 
   private getDateFilter(period: 'weekly' | 'monthly' | 'yearly') {
@@ -268,7 +368,6 @@ export class AnalyticsService {
   }
 
   private processSpendingTrends(expenses: any[], period: string) {
-    // Group expenses by time period
     const grouped = expenses.reduce((acc: any, expense) => {
       const key = this.getGroupingKey(expense.date, period);
       if (!acc[key]) {
@@ -285,7 +384,7 @@ export class AnalyticsService {
   private getGroupingKey(date: Date, period: string): string {
     switch (period) {
       case 'weekly':
-        return date.toISOString().split('T')[0]; // Daily for weekly view
+        return date.toISOString().split('T')[0];
       case 'monthly':
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       case 'yearly':
@@ -295,32 +394,7 @@ export class AnalyticsService {
     }
   }
 
-  private combineIncomeExpenses(expenses: any[], income: any[], period: string) {
-    const combined = {};
-
-    expenses.forEach(expense => {
-      const key = this.getGroupingKey(expense.date, period);
-      if (!combined[key]) {
-        combined[key] = { date: key, expenses: 0, income: 0 };
-      }
-      combined[key].expenses += expense._sum.amount || 0;
-    });
-
-    income.forEach(inc => {
-      const key = this.getGroupingKey(inc.date, period);
-      if (!combined[key]) {
-        combined[key] = { date: key, expenses: 0, income: 0 };
-      }
-      combined[key].income += inc._sum.amount || 0;
-    });
-
-    return Object.values(combined).sort((a: any, b: any) => a.date.localeCompare(b.date));
-  }
-
   private calculatePredictions(expenses: any[]) {
-    // Simple linear regression for prediction
-    // In a real implementation, you'd use more sophisticated ML models
-
     const monthlyAverages = expenses.reduce((acc, expense) => {
       const month = `${expense.date.getFullYear()}-${String(expense.date.getMonth() + 1).padStart(2, '0')}`;
       if (!acc[month]) acc[month] = 0;
@@ -333,12 +407,41 @@ export class AnalyticsService {
 
     return {
       monthlyExpenses: averageMonthlySpend,
-      categorySpending: {}, // Simplified for this example
+      categorySpending: {},
       recommendations: [
         'Consider reducing dining expenses by 15% to meet savings goals',
         'Your utility bills are higher than usual - check for efficiency improvements',
         'Great job on staying within budget for entertainment!',
       ],
     };
+  }
+
+  private getGrade(score: number): string {
+    if (score >= 90) return 'A+';
+    if (score >= 80) return 'A';
+    if (score >= 70) return 'B';
+    if (score >= 60) return 'C';
+    if (score >= 50) return 'D';
+    return 'F';
+  }
+
+  private getRecommendations(score: number): string[] {
+    if (score >= 80) {
+      return [
+        'Excellent financial health! Keep up the good work.',
+        'Consider increasing your savings rate for long-term goals.',
+      ];
+    } else if (score >= 60) {
+      return [
+        'Good financial health with room for improvement.',
+        'Review your budget categories for potential optimizations.',
+      ];
+    } else {
+      return [
+        'Financial health needs attention. Focus on reducing expenses.',
+        'Consider creating a detailed budget and tracking all spending.',
+        'Look for ways to increase your income or reduce major expenses.',
+      ];
+    }
   }
 }
