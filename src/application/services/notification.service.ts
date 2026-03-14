@@ -7,7 +7,7 @@ export class NotificationService {
   constructor(
     private readonly notificationsGateway: NotificationsGateway,
     private readonly prisma: PrismaService,
-  ) {}
+  ) { }
 
   async createNotification(data: {
     userId: string;
@@ -41,9 +41,16 @@ export class NotificationService {
     });
   }
 
-  async markAsRead(notificationId: string) {
-    return this.prisma.notification.update({
-      where: { id: notificationId },
+  async getPendingNotifications(userId: string) {
+    return this.prisma.notification.findMany({
+      where: { userId, isRead: false },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async markAsRead(userId: string, notificationId: string) {
+    return this.prisma.notification.updateMany({
+      where: { id: notificationId, userId },
       data: { isRead: true, readAt: new Date() },
     });
   }
